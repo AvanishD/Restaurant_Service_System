@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="frontend.css">
+<title>Restaurant Service</title>
+</head>
+<body>
+
+<div class="container">
+    <h1>Restaurant Service</h1>
+
+    <div class="tab">
+        <button class="tablinks" onclick="openTab(event, 'create')">Create Product</button>
+        <button class="tablinks" onclick="openTab(event, 'list')">List Products</button>
+        <button class="tablinks" onclick="openTab(event, 'update')">Update Product</button>
+        <button class="tablinks" onclick="openTab(event, 'delete')">Delete Product</button>
+        <button class="tablinks" onclick="openTab(event, 'order')">Place Order</button>
+    </div>
+
+    <!-- Create Product Tab -->
+    <div id="create" class="tabcontent">
+        <h2>Create Product</h2>
+        <div class="form-group">
+            <label for="productName">Product Name:</label>
+            <input type="text" id="productName" placeholder="Enter product name">
+            <label for="productPrice">Product Price:</label>
+            <input type="number" id="productPrice" placeholder="Enter product price">
+            <button onclick="createProduct()">Create Product</button>
+        </div>
+    </div>
+
+    <!-- List Products Tab -->
+    <div id="list" class="tabcontent">
+        <h2>List Products</h2>
+        <button onclick="listProducts()">List Products</button>
+        <div id="productList" class="response"></div>
+        <table id="productTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody id="productTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Update Product Tab -->
+    <div id="update" class="tabcontent">
+        <h2>Update Product</h2>
+        <div class="form-group">
+            <label for="updateProductId">Product ID:</label>
+            <input type="number" id="updateProductId" placeholder="Enter product ID">
+            <label for="updatedProductName">Updated Name:</label>
+            <input type="text" id="updatedProductName" placeholder="Enter updated name">
+            <label for="updatedProductPrice">Updated Price:</label>
+            <input type="number" id="updatedProductPrice" placeholder="Enter updated price">
+            <button onclick="updateProduct()">Update Product</button>
+        </div>
+    </div>
+
+    <!-- Delete Product Tab -->
+    <div id="delete" class="tabcontent">
+        <h2>Delete Product</h2>
+        <div class="form-group">
+            <label for="deleteProductId">Product ID:</label>
+            <input type="number" id="deleteProductId" placeholder="Enter product ID">
+            <button onclick="deleteProduct()">Delete Product</button>
+        </div>
+    </div>
+
+    <!-- Place Order Tab -->
+    <div id="order" class="tabcontent">
+        <h2>Place Order</h2>
+        <div class="form-group">
+            <label for="orderProductId">Product ID:</label>
+            <input type="number" id="orderProductId" placeholder="Enter product ID">
+            <label for="orderQuantity">Quantity:</label>
+            <input type="number" id="orderQuantity" placeholder="Enter quantity">
+            <button onclick="placeOrder()">Place Order</button>
+        </div>
+    </div>
+
+    <div class="response-container">
+        <h2>API Response:</h2>
+        <div id="apiResponse" class="response"></div>
+    </div>
+</div>
+
+<script>
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+
+    function createProduct() {
+        const productName = document.getElementById('productName').value;
+        const productPrice = document.getElementById('productPrice').value;
+
+        fetch('http://localhost:5000/products', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({name: productName, price: productPrice})
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('apiResponse').innerHTML = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    function listProducts() {
+    fetch('http://localhost:5000/products')
+    .then(response => response.json())
+    .then(data => {
+        const productList = document.getElementById('productList');
+        const productTable = document.getElementById('productTable');
+        const productTableBody = document.getElementById('productTableBody');
+        
+        productList.innerHTML = JSON.stringify(data, null, 2);
+        productTable.style.display = 'block'; // Show the table
+
+        // Clear previous data in table
+        while (productTableBody.firstChild) {
+            productTableBody.removeChild(productTableBody.firstChild);
+        }
+
+        // Populate table with product data
+        data.forEach(product => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${product.id}</td>
+                <td>${product.name}</td>
+                <td>${product.price}</td>
+            `;
+            productTableBody.appendChild(row);
+        });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+
+    function updateProduct() {
+        const productId = document.getElementById('updateProductId').value;
+        const updatedName = document.getElementById('updatedProductName').value;
+        const updatedPrice = document.getElementById('updatedProductPrice').value;
+
+        fetch(`http://localhost:5000/products/${productId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({name: updatedName, price: updatedPrice})
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('apiResponse').innerHTML = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    function deleteProduct() {
+        const productId = document.getElementById('deleteProductId').value;
+
+        fetch(`http://localhost:5000/products/${productId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('apiResponse').innerHTML = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    function placeOrder() {
+        const productId = document.getElementById('orderProductId').value;
+        const quantity = document.getElementById('orderQuantity').value;
+
+        fetch('http://localhost:5000/orders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({product_id: productId, quantity: quantity})
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('apiResponse').innerHTML = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script>
+
+</body>
+</html>
